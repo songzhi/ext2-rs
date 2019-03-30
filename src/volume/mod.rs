@@ -2,7 +2,7 @@ use core::mem;
 use core::slice;
 use core::ops::{Deref, DerefMut, Range};
 
-use alloc::Vec;
+use alloc::vec::Vec;
 use alloc::boxed::Box;
 use alloc::borrow::{Cow, ToOwned};
 

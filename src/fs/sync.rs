@@ -1,9 +1,10 @@
 use core::fmt::{self, Debug};
-use core::nonzero::NonZero;
+use core::num::NonZeroU32;
 use core::iter::Iterator;
 
-use alloc::{String, Vec};
-use alloc::arc::Arc;
+use alloc::string::String;
+use alloc::vec::Vec;
+use alloc::sync::Arc;
 
 use spin::{Mutex, MutexGuard};
 use genfs::*;
@@ -381,14 +382,14 @@ impl<S: SectorSize, V: Volume<u8, S>> Inode<S, V> {
         unsafe { self.inner.type_perm.contains(TypePerm::DIRECTORY) }
     }
 
-    pub fn block(&self, index: usize) -> Option<NonZero<u32>> {
+    pub fn block(&self, index: usize) -> Option<NonZeroU32> {
         self.try_block(index).ok().and_then(|block| block)
     }
 
     pub fn try_block(
         &self,
         mut index: usize,
-    ) -> Result<Option<NonZero<u32>>, Error> {
+    ) -> Result<Option<NonZeroU32>, Error> {
         // number of blocks in direct table: 12
         // number of blocks in indirect table: block_size/4
         //   why?
@@ -408,7 +409,7 @@ impl<S: SectorSize, V: Volume<u8, S>> Inode<S, V> {
             block: u32,
             index: usize,
             log_block_size: u32,
-        ) -> Result<Option<NonZero<u32>>, Error> {
+        ) -> Result<Option<NonZeroU32>, Error> {
             let offset = (index * 4) as i32;
             let end = offset + 4;
             let addr = Address::with_block_size(block, offset, log_block_size);
@@ -416,7 +417,7 @@ impl<S: SectorSize, V: Volume<u8, S>> Inode<S, V> {
             let block = volume.slice(addr..end);
             match block {
                 Ok(block) => unsafe {
-                    Ok(NonZero::new(block.dynamic_cast::<u32>().0))
+                    Ok(NonZeroU32::new(block.dynamic_cast::<u32>().0))
                 },
                 Err(err) => Err(err.into()),
             }
@@ -428,7 +429,7 @@ impl<S: SectorSize, V: Volume<u8, S>> Inode<S, V> {
         let log_block_size = fs.log_block_size();
 
         if index < 12 {
-            return Ok(NonZero::new(self.inner.direct_pointer[index]));
+            return Ok(NonZeroU32::new(self.inner.direct_pointer[index]));
         }
 
         index -= 12;

@@ -1,7 +1,7 @@
 use core::mem;
 use core::fmt::{self, Debug};
 
-use alloc::Vec;
+use alloc::vec::Vec;
 
 use error::Error;
 use sector::{Address, SectorSize};

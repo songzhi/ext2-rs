@@ -1,6 +1,6 @@
 use core::mem;
 
-use alloc::Vec;
+use alloc::vec::Vec;
 
 use error::Error;
 use sector::{Address, SectorSize};

@@ -1,10 +1,7 @@
 #![feature(alloc)]
 #![feature(specialization)]
-#![feature(swap_with_slice)]
-#![feature(macro_lifetime_matcher)]
 #![feature(const_fn)]
 #![feature(step_trait)]
-#![feature(nonzero)]
 #![feature(associated_type_defaults)]
 #![cfg_attr(all(not(test), feature = "no_std"), no_std)]
 
