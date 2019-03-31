@@ -55,8 +55,9 @@ impl<S: SectorSize> Address<S> {
     }
 
     pub fn new(sector: u32, offset: i32) -> Address<S> {
-        let sector = (sector as i32 + (offset >> S::LOG_SIZE)) as u32;
-        let offset = offset.abs() as u32 & S::OFFSET_MASK;
+        let index = ((sector as i64) << S::LOG_SIZE) + offset as i64;
+        let sector = (index >> S::LOG_SIZE) as u32;
+        let offset = index as u32 & S::OFFSET_MASK;
         unsafe { Address::new_unchecked(sector, offset) }
     }
 
@@ -65,13 +66,9 @@ impl<S: SectorSize> Address<S> {
         offset: i32,
         log_block_size: u32,
     ) -> Address<S> {
-        let block = (block as i32 + (offset >> log_block_size)) as u32;
-        let offset = offset.abs() as u32 & ((1 << log_block_size) - 1);
-
-        let log_diff = log_block_size as i32 - S::LOG_SIZE as i32;
-        let top_offset = offset >> S::LOG_SIZE;
-        let offset = offset & ((1 << S::LOG_SIZE) - 1);
-        let sector = block << log_diff | top_offset;
+        let index = ((block as i64) << log_block_size) + offset as i64;
+        let sector = (index >> S::LOG_SIZE) as u32;
+        let offset = index as u32 & S::OFFSET_MASK;
         unsafe { Address::new_unchecked(sector, offset) }
     }
 
@@ -199,6 +196,10 @@ mod tests {
             1024 + 256
         );
         assert_eq!(
+            Address::<Size512>::with_block_size(1, -256, 10).into_index(),
+            1024 - 256
+        );
+        assert_eq!(
             Address::<Size512>::with_block_size(2, 0, 10).into_index(),
             2048
         );
@@ -218,6 +219,16 @@ mod tests {
         assert_eq!(
             Address::<Size512>::new(2, -256),
             Address::<Size512>::new(1, 256),
+        );
+
+        assert_eq!(
+            Address::<Size512>::new(2, -257),
+            Address::<Size512>::new(1, 255),
+        );
+
+        assert_eq!(
+            Address::<Size512>::new(2, -1023),
+            Address::<Size512>::new(0, 1),
         );
 
         let a = Address::<Size2048>::new(0, 1024);
