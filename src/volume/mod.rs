@@ -1,10 +1,10 @@
 use core::mem;
-use core::slice;
 use core::ops::{Deref, DerefMut, Range};
+use core::slice;
 
-use alloc::vec::Vec;
-use alloc::boxed::Box;
 use alloc::borrow::{Cow, ToOwned};
+use alloc::boxed::Box;
+use alloc::vec::Vec;
 
 use error::Error;
 use sector::{Address, SectorSize};
@@ -16,22 +16,26 @@ pub trait Volume<T: Clone, S: SectorSize> {
     type Error: Into<Error>;
 
     fn size(&self) -> Size<S>;
+
     fn commit(
         &mut self,
         slice: Option<VolumeCommit<T, S>>,
     ) -> Result<(), Self::Error>;
-    unsafe fn slice_unchecked<'a>(
-        &'a self,
-        range: Range<Address<S>>,
-    ) -> VolumeSlice<'a, T, S>;
 
-    fn slice<'a>(
-        &'a self,
+    ///
+    /// # Safety
+    unsafe fn slice_unchecked(
+        &self,
         range: Range<Address<S>>,
-    ) -> Result<VolumeSlice<'a, T, S>, Self::Error>;
+    ) -> VolumeSlice<T, S>;
+
+    fn slice(
+        &self,
+        range: Range<Address<S>>,
+    ) -> Result<VolumeSlice<T, S>, Self::Error>;
 }
 
-#[derive(Debug, Clone, PartialEq, Hash)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct VolumeSlice<'a, T: 'a + Clone, S: SectorSize> {
     inner: Cow<'a, [T]>,
     index: Address<S>,
@@ -77,6 +81,8 @@ impl<'a, T: Clone, S: SectorSize> VolumeSlice<'a, T, S> {
 }
 
 impl<'a, S: SectorSize> VolumeSlice<'a, u8, S> {
+    ///
+    /// # Safety
     pub unsafe fn dynamic_cast<T: Copy>(&self) -> (T, Address<S>) {
         assert!(self.inner.len() >= mem::size_of::<T>());
         let index = self.index;
@@ -257,15 +263,15 @@ impl_slice!(Box<[T]>);
 
 #[cfg(any(test, not(feature = "no_std")))]
 mod file {
-    use std::ops::Range;
-    use std::io::{self, Read, Seek, SeekFrom, Write};
-    use std::fs::File;
     use std::cell::RefCell;
+    use std::fs::File;
+    use std::io::{self, Read, Seek, SeekFrom, Write};
+    use std::ops::Range;
 
     use sector::{Address, SectorSize};
 
-    use super::{Volume, VolumeCommit, VolumeSlice};
     use super::size::Size;
+    use super::{Volume, VolumeCommit, VolumeSlice};
 
     impl<S: SectorSize> Volume<u8, S> for RefCell<File> {
         type Error = io::Error;
@@ -275,7 +281,7 @@ mod file {
                 self.borrow()
                     .metadata()
                     .map(|data| Address::from(data.len()))
-                    .unwrap_or(Address::new(0, 0)),
+                    .unwrap_or_else(|_| Address::new(0, 0)),
             )
         }
 
@@ -295,10 +301,10 @@ mod file {
                 .unwrap_or(Ok(()))
         }
 
-        unsafe fn slice_unchecked<'a>(
-            &'a self,
+        unsafe fn slice_unchecked(
+            &self,
             range: Range<Address<S>>,
-        ) -> VolumeSlice<'a, u8, S> {
+        ) -> VolumeSlice<u8, S> {
             let index = range.start;
             let len = range.end - range.start;
             let mut vec = Vec::with_capacity(len.into_index() as usize);
@@ -313,14 +319,14 @@ mod file {
             VolumeSlice::new_owned(vec, index)
         }
 
-        fn slice<'a>(
-            &'a self,
+        fn slice(
+            &self,
             range: Range<Address<S>>,
-        ) -> Result<VolumeSlice<'a, u8, S>, Self::Error> {
+        ) -> Result<VolumeSlice<u8, S>, Self::Error> {
             let index = range.start;
-            let mut vec = Vec::with_capacity((range.end - range.start)
-                .into_index()
-                as usize);
+            let mut vec = Vec::with_capacity(
+                (range.end - range.start).into_index() as usize,
+            );
             unsafe {
                 vec.set_len((range.end - range.start).into_index() as usize);
             }
@@ -335,8 +341,8 @@ mod file {
 
 #[cfg(test)]
 mod tests {
-    use sector::{Address, Size512};
     use super::*;
+    use sector::{Address, Size512};
 
     #[test]
     fn volume() {
@@ -354,7 +360,7 @@ mod tests {
         assert!(volume.commit(commit).is_ok());
 
         for (i, &x) in volume.iter().enumerate() {
-            if i < 256 || i >= 512 {
+            if !(256..512).contains(&i) {
                 assert_eq!(x, 0);
             } else {
                 assert_eq!(x, 1);

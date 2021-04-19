@@ -1,8 +1,6 @@
-#![feature(alloc)]
-#![feature(specialization)]
 #![feature(const_fn)]
 #![feature(step_trait)]
-#![feature(associated_type_defaults)]
+#![feature(step_trait_ext)]
 #![cfg_attr(all(not(test), feature = "no_std"), no_std)]
 
 #[macro_use]
@@ -16,16 +14,16 @@ extern crate spin;
 extern crate core;
 
 pub mod error;
-pub mod sys;
-pub mod sector;
-pub mod volume;
 pub mod fs;
+pub mod sector;
+pub mod sys;
+pub mod volume;
 
 #[cfg(test)]
 mod tests {
-    use sys::superblock::*;
     use sys::block_group::*;
     use sys::inode::*;
+    use sys::superblock::*;
 
     #[test]
     fn sizes() {

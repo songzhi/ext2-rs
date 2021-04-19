@@ -1,5 +1,5 @@
-use core::mem;
 use core::fmt::{self, Debug};
+use core::mem;
 
 use error::Error;
 use sector::{Address, SectorSize};
@@ -149,52 +149,54 @@ pub struct Superblock {
 impl Debug for Superblock {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("Superblock")
-            .field("inodes_count", unsafe { &self.inodes_count })
-            .field("blocks_count", unsafe { &self.blocks_count })
-            .field("r_blocks_count", unsafe { &self.r_blocks_count })
-            .field("free_blocks_count", unsafe { &self.free_blocks_count })
-            .field("free_inodes_count", unsafe { &self.free_inodes_count })
-            .field("first_data_block", unsafe { &self.first_data_block })
-            .field("log_block_size", unsafe { &self.log_block_size })
-            .field("log_frag_size", unsafe { &self.log_frag_size })
-            .field("blocks_per_group", unsafe { &self.blocks_per_group })
-            .field("frags_per_group", unsafe { &self.frags_per_group })
-            .field("inodes_per_group", unsafe { &self.inodes_per_group })
-            .field("mtime", unsafe { &self.mtime })
-            .field("wtime", unsafe { &self.wtime })
-            .field("mnt_count", unsafe { &self.mnt_count })
-            .field("max_mnt_count", unsafe { &self.max_mnt_count })
-            .field("magic", unsafe { &self.magic })
-            .field("state", unsafe { &self.state })
-            .field("errors", unsafe { &self.errors })
-            .field("rev_minor", unsafe { &self.rev_minor })
-            .field("lastcheck", unsafe { &self.lastcheck })
-            .field("checkinterval", unsafe { &self.checkinterval })
-            .field("creator_os", unsafe { &self.creator_os })
-            .field("rev_major", unsafe { &self.rev_major })
-            .field("block_uid", unsafe { &self.block_uid })
-            .field("block_gid", unsafe { &self.block_gid })
-            .field("first_inode", unsafe { &self.first_inode })
-            .field("inode_size", unsafe { &self.inode_size })
-            .field("block_group", unsafe { &self.block_group })
-            .field("features_opt", unsafe { &self.features_opt })
-            .field("features_req", unsafe { &self.features_req })
-            .field("features_ronly", unsafe { &self.features_ronly })
+            .field("inodes_count", &{ self.inodes_count })
+            .field("blocks_count", &{ self.blocks_count })
+            .field("r_blocks_count", &{ self.r_blocks_count })
+            .field("free_blocks_count", &{ self.free_blocks_count })
+            .field("free_inodes_count", &{ self.free_inodes_count })
+            .field("first_data_block", &{ self.first_data_block })
+            .field("log_block_size", &{ self.log_block_size })
+            .field("log_frag_size", &{ self.log_frag_size })
+            .field("blocks_per_group", &{ self.blocks_per_group })
+            .field("frags_per_group", &{ self.frags_per_group })
+            .field("inodes_per_group", &{ self.inodes_per_group })
+            .field("mtime", &{ self.mtime })
+            .field("wtime", &{ self.wtime })
+            .field("mnt_count", &{ self.mnt_count })
+            .field("max_mnt_count", &{ self.max_mnt_count })
+            .field("magic", &{ self.magic })
+            .field("state", &{ self.state })
+            .field("errors", &{ self.errors })
+            .field("rev_minor", &{ self.rev_minor })
+            .field("lastcheck", &{ self.lastcheck })
+            .field("checkinterval", &{ self.checkinterval })
+            .field("creator_os", &{ self.creator_os })
+            .field("rev_major", &{ self.rev_major })
+            .field("block_uid", &{ self.block_uid })
+            .field("block_gid", &{ self.block_gid })
+            .field("first_inode", &{ self.first_inode })
+            .field("inode_size", &{ self.inode_size })
+            .field("block_group", &{ self.block_group })
+            .field("features_opt", &{ self.features_opt })
+            .field("features_req", &{ self.features_req })
+            .field("features_ronly", &{ self.features_ronly })
             .field("fs_id", &self.fs_id)
             .field("volume_name", &self.volume_name)
             .field("last_mnt_path", &self.last_mnt_path.as_ref())
-            .field("compression", unsafe { &self.compression })
+            .field("compression", &{ self.compression })
             .field("prealloc_blocks_files", &self.prealloc_blocks_files)
             .field("prealloc_blocks_dirs", &self.prealloc_blocks_dirs)
             .field("journal_id", &self.journal_id)
-            .field("journal_inode", unsafe { &self.journal_inode })
-            .field("journal_dev", unsafe { &self.journal_dev })
-            .field("journal_orphan_head", unsafe { &self.journal_orphan_head })
+            .field("journal_inode", &{ self.journal_inode })
+            .field("journal_dev", &{ self.journal_dev })
+            .field("journal_orphan_head", &{ self.journal_orphan_head })
             .finish()
     }
 }
 
 impl Superblock {
+    ///
+    /// # Safety
     pub unsafe fn find<S: SectorSize, V: Volume<u8, S>>(
         haystack: &V,
     ) -> Result<(Superblock, Address<S>), Error> {
@@ -295,8 +297,8 @@ bitflags! {
 
 #[cfg(test)]
 mod tests {
-    use sector::Size512;
     use super::*;
+    use sector::Size512;
 
     #[test]
     fn find() {

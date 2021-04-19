@@ -1,5 +1,5 @@
-use core::mem;
 use core::fmt::{self, Debug};
+use core::mem;
 
 use error::Error;
 use sector::{Address, SectorSize};
@@ -71,32 +71,34 @@ pub struct Inode {
 impl Debug for Inode {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("Inode")
-            .field("type_perm", unsafe { &self.type_perm })
-            .field("uid", unsafe { &self.uid })
-            .field("size_low", unsafe { &self.size_low })
-            .field("atime", unsafe { &self.atime })
-            .field("ctime", unsafe { &self.ctime })
-            .field("mtime", unsafe { &self.mtime })
-            .field("dtime", unsafe { &self.dtime })
-            .field("gid", unsafe { &self.gid })
-            .field("hard_links", unsafe { &self.hard_links })
-            .field("sectors_count", unsafe { &self.sectors_count })
-            .field("flags", unsafe { &self.flags })
+            .field("type_perm", &{ self.type_perm })
+            .field("uid", &{ self.uid })
+            .field("size_low", &{ self.size_low })
+            .field("atime", &{ self.atime })
+            .field("ctime", &{ self.ctime })
+            .field("mtime", &{ self.mtime })
+            .field("dtime", &{ self.dtime })
+            .field("gid", &{ self.gid })
+            .field("hard_links", &{ self.hard_links })
+            .field("sectors_count", &{ self.sectors_count })
+            .field("flags", &{ self.flags })
             .field("os_specific_1", &self._os_specific_1)
-            .field("direct_pointer", unsafe { &self.direct_pointer })
-            .field("indirect_pointer", unsafe { &self.indirect_pointer })
-            .field("doubly_indirect", unsafe { &self.doubly_indirect })
-            .field("triply_indirect", unsafe { &self.triply_indirect })
-            .field("gen_number", unsafe { &self.gen_number })
-            .field("ext_attribute_block", unsafe { &self.ext_attribute_block })
-            .field("size_high", unsafe { &self.size_high })
-            .field("frag_block_addr", unsafe { &self.frag_block_addr })
+            .field("direct_pointer", &{ self.direct_pointer })
+            .field("indirect_pointer", &{ self.indirect_pointer })
+            .field("doubly_indirect", &{ self.doubly_indirect })
+            .field("triply_indirect", &{ self.triply_indirect })
+            .field("gen_number", &{ self.gen_number })
+            .field("ext_attribute_block", &{ self.ext_attribute_block })
+            .field("size_high", &{ self.size_high })
+            .field("frag_block_addr", &{ self.frag_block_addr })
             .field("os_specific_2", &self._os_specific_2)
             .finish()
     }
 }
 
 impl Inode {
+    ///
+    /// # Safety
     pub unsafe fn find_inode<S: SectorSize, V: Volume<u8, S>>(
         haystack: &V,
         offset: Address<S>,

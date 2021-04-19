@@ -3,7 +3,7 @@ use core::cmp::Ordering;
 
 use sector::{Address, SectorSize};
 
-#[derive(Clone, Copy, Debug, Hash)]
+#[derive(Clone, Copy, Debug)]
 pub enum Size<S: SectorSize> {
     Unbounded,
     Bounded(Address<S>),
@@ -17,22 +17,9 @@ impl<S: SectorSize> Size<S> {
         }
     }
 
-    pub unsafe fn len(&self) -> Address<S> {
-        match *self {
-            Size::Unbounded => panic!(
-                "attempt to convert `Size::Unbounded` to a concrete length"
-            ),
-            Size::Bounded(n) => n,
-        }
-    }
-}
-
-impl<S: SectorSize> Size<S> {
+    /// Returns `true` if the size is [`Bounded`].
     pub fn is_bounded(&self) -> bool {
-        match *self {
-            Size::Unbounded => false,
-            Size::Bounded(_) => true,
-        }
+        matches!(self, Self::Bounded(..))
     }
 }
 
@@ -53,25 +40,10 @@ impl<S: SectorSize> PartialEq for Size<S> {
             (&Size::Bounded(ref a), &Size::Bounded(ref b)) => a.eq(b),
         }
     }
-
-    fn ne(&self, rhs: &Self) -> bool {
-        match (self, rhs) {
-            (&Size::Unbounded, _) => false,
-            (_, &Size::Unbounded) => false,
-            (&Size::Bounded(ref a), &Size::Bounded(ref b)) => a.ne(b),
-        }
-    }
 }
 
 impl<S: SectorSize> PartialEq<Address<S>> for Size<S> {
     fn eq(&self, rhs: &Address<S>) -> bool {
-        match *self {
-            Size::Unbounded => false,
-            Size::Bounded(ref n) => n.eq(rhs),
-        }
-    }
-
-    fn ne(&self, rhs: &Address<S>) -> bool {
         match *self {
             Size::Unbounded => false,
             Size::Bounded(ref n) => n.eq(rhs),

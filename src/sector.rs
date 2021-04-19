@@ -1,8 +1,7 @@
-use core::mem;
-use core::marker::PhantomData;
-use core::ops::{Add, Sub};
 use core::fmt::{self, Debug, Display, LowerHex};
 use core::iter::Step;
+use core::marker::PhantomData;
+use core::ops::{Add, Sub};
 
 pub trait SectorSize: Clone + Copy + PartialEq + PartialOrd + 'static {
     // log_sector_size = log_2(sector_size)
@@ -36,7 +35,7 @@ impl SectorSize for Size4096 {
 }
 
 /// Address in a physical sector
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Default)]
 pub struct Address<S: SectorSize> {
     sector: u32,
     offset: u32,
@@ -44,13 +43,15 @@ pub struct Address<S: SectorSize> {
 }
 
 impl<S: SectorSize> Address<S> {
+    ///
+    /// # Safety
     pub unsafe fn new_unchecked(sector: u32, offset: u32) -> Address<S> {
         assert!((offset as usize) < S::SIZE, "offset out of sector bounds");
-        let _phantom = PhantomData;
+
         Address {
             sector,
             offset,
-            _phantom,
+            _phantom: PhantomData,
         }
     }
 
@@ -72,7 +73,7 @@ impl<S: SectorSize> Address<S> {
         unsafe { Address::new_unchecked(sector, offset) }
     }
 
-    pub fn into_index(&self) -> u64 {
+    pub fn into_index(self) -> u64 {
         ((self.sector as u64) << S::LOG_SIZE) + self.offset as u64
     }
 
@@ -93,7 +94,7 @@ impl<S: SectorSize> Address<S> {
     }
 }
 
-impl<S: SectorSize> Step for Address<S> {
+unsafe impl<S: SectorSize> Step for Address<S> {
     fn steps_between(start: &Self, end: &Self) -> Option<usize> {
         if end.sector >= start.sector {
             Some(end.sector as usize - start.sector as usize)
@@ -102,25 +103,17 @@ impl<S: SectorSize> Step for Address<S> {
         }
     }
 
-    fn replace_one(&mut self) -> Self {
-        mem::replace(self, Address::new(1, 0))
+    fn forward_checked(start: Self, count: usize) -> Option<Self> {
+        start
+            .sector
+            .checked_add(count as u32)
+            .map(|sector| Address::new(sector, 0))
     }
 
-    fn replace_zero(&mut self) -> Self {
-        mem::replace(self, Address::new(0, 0))
-    }
-
-    fn add_one(&self) -> Self {
-        Address::new(self.sector + 1, 0)
-    }
-
-    fn sub_one(&self) -> Self {
-        Address::new(self.sector - 1, 0)
-    }
-
-    fn add_usize(&self, n: usize) -> Option<Self> {
-        self.sector
-            .checked_add(n as u32)
+    fn backward_checked(start: Self, count: usize) -> Option<Self> {
+        start
+            .sector
+            .checked_sub(count as u32)
             .map(|sector| Address::new(sector, 0))
     }
 }

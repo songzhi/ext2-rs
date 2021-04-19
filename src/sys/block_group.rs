@@ -1,5 +1,5 @@
-use core::mem;
 use core::fmt::{self, Debug};
+use core::mem;
 
 use alloc::vec::Vec;
 
@@ -41,17 +41,19 @@ pub struct BlockGroupDescriptor {
 impl Debug for BlockGroupDescriptor {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("BlockGroupDescriptor")
-            .field("block_usage_addr", unsafe { &self.block_usage_addr })
-            .field("inode_usage_addr", unsafe { &self.inode_usage_addr })
-            .field("inode_table_block", unsafe { &self.inode_table_block })
-            .field("free_blocks_count", unsafe { &self.free_blocks_count })
-            .field("free_inodes_count", unsafe { &self.free_inodes_count })
-            .field("dirs_count", unsafe { &self.dirs_count })
+            .field("block_usage_addr", &{ self.block_usage_addr })
+            .field("inode_usage_addr", &{ self.inode_usage_addr })
+            .field("inode_table_block", &{ self.inode_table_block })
+            .field("free_blocks_count", &{ self.free_blocks_count })
+            .field("free_inodes_count", &{ self.free_inodes_count })
+            .field("dirs_count", &{ self.dirs_count })
             .finish()
     }
 }
 
 impl BlockGroupDescriptor {
+    ///
+    /// # Safety
     pub unsafe fn find_descriptor<S: SectorSize, V: Volume<u8, S>>(
         haystack: &V,
         offset: Address<S>,
@@ -73,6 +75,8 @@ impl BlockGroupDescriptor {
         Ok(descr)
     }
 
+    ///
+    /// # Safety
     pub unsafe fn find_descriptor_table<S: SectorSize, V: Volume<u8, S>>(
         haystack: &V,
         offset: Address<S>,
@@ -103,8 +107,8 @@ impl BlockGroupDescriptor {
 
 #[cfg(test)]
 mod tests {
-    use sector::{Address, Size512};
     use super::*;
+    use sector::{Address, Size512};
 
     #[test]
     fn find() {
