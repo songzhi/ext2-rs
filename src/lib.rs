@@ -1,7 +1,7 @@
 #![feature(const_fn)]
 #![feature(step_trait)]
 #![feature(step_trait_ext)]
-#![cfg_attr(all(not(test), feature = "no_std"), no_std)]
+#![cfg_attr(not(test), no_std)]
 
 #[macro_use]
 extern crate alloc;
@@ -10,7 +10,7 @@ extern crate bitflags;
 extern crate genfs;
 extern crate spin;
 
-#[cfg(any(test, not(feature = "no_std")))]
+#[cfg(any(test))]
 extern crate core;
 
 pub mod error;

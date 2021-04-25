@@ -68,11 +68,11 @@ impl BlockGroupDescriptor {
             });
         }
 
-        let descr = haystack
+        let descriptor = haystack
             .slice_unchecked(offset..end)
             .dynamic_cast::<BlockGroupDescriptor>();
 
-        Ok(descr)
+        Ok(descriptor)
     }
 
     ///
