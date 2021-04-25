@@ -9,4 +9,5 @@ spin = "0.9"
 genfs = "^0.1.4"
 
 [features]
-
+default = ["no_std"]
+no_std = []
